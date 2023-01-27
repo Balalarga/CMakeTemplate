@@ -6,7 +6,7 @@ set(IS_LIBRARY OFF)
 set(IS_INTERFACE OFF)
 
 set(USE_MODULE_SYSTEM ON)
-set(MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Source)
+set(MODULES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME})
 
 set(HAVE_TESTS OFF)
 
@@ -17,9 +17,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/CMakeUtils")
-include(Utils\FileSystem)
+include(Utils/FileSystem)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(IS_MAIN_PROJECT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 if(WIN32)
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
@@ -28,6 +30,10 @@ endif()
 
 if(HAVE_TESTS)
     add_subdirectory(Tests)
+
+    if(IS_MAIN_PROJECT AND EXISTS(Tests/CMakeLists.txt))
+        add_subdirectory(Tests)
+    endif()
 endif()
 
 if(IS_LIBRARY)
@@ -41,7 +47,7 @@ else()
 endif()
 
 if(USE_MODULE_SYSTEM)
-    ListOfDirectChildDirectories MODULES_DIR ${MODULES_DIR})
+    ListOfDirectChildDirectories(MODULES_DIR ${MODULES_DIR})
     foreach(MODULE ${MODULES_LIST})
         if(EXISTS ${MODULES_DIR}/${MODULE}/CMakeLists.txt)
             add_subdirectory(${MODULES_DIR}/${MODULE} ${MODULE})
@@ -53,8 +59,8 @@ if(USE_MODULE_SYSTEM)
         endif()
     endforeach()
 else()
-    add_subdirectory(Source)
-    get_property(MODULE_TARGET DIRECTORY Source PROPERTY BUILDSYSTEM_TARGETS)
+    add_subdirectory(${PROJECT_NAME})
+    get_property(MODULE_TARGET DIRECTORY ${PROJECT_NAME} PROPERTY BUILDSYSTEM_TARGETS)
     set_target_properties(${MODULE_TARGET} PROPERTIES FOLDER ${PROJECT_NAME})
 endif()
 
